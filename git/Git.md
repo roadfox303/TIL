@@ -120,3 +120,56 @@ git config --list
 ### push
 - git push -u origin master
   - -u　オプションをつけると、次回から git push のみで origin master にプッシュできる。
+
+### コマンドにエイリアスをつける
+- コマンドを省略できる。
+- git config --global alias.ci commit
+  - git ci　でコミットできるようになる。(--global をつけることによってPC全体で有効な設定になる。)
+- git config --global alias.st status
+- git config --global alias.br branch
+- git config --global alias.co checkout
+
+### ワークツリーのファイルへの変更を取り消す
+- git checkout -- ファイル名
+- git checkout -- ディレクトリ名
+- git checkout -- . (全ファイル)
+- ステージの情報を取得してワークツリーへ反映する。
+
+### ステージした変更を取り消す
+- git reset HEAD ファイル名
+- gir teset HEAD ディレクトリ名
+- git reset HEAD . (全変更を取り消す)
+- ステージから取り消すだけなので、ワークツリーのファイルには影響を与えない。
+- リポジトリから直前のコミットを取得してきて、ステージの内容に上書きしている。
+- HEAD とは 自分がいるブランチの最新のコミット
+
+### 直前のコミットをやりなおし(ローカルリポジトリの場合)
+- git commit --amend
+- 今のステージの内容で直前のコミットを上書きする
+- リモートにプッシュしたコミットについてはやり直してはいけない！
+
+### リモートの情報を確認する
+- リモートリポジトリの情報(名前)を表示する。
+  - git remote
+- リモートのURLを表示
+  - git remote -v
+
+### リモートリポジトリを新規追加
+- リモートリポジトリは複数登録できる。
+- git remote add リモート名 リモートURL
+
+### リーモートから情報を取得する（fetch）
+- git fetch リモート名
+  - git fetch origin
+- リモートからローカルリポジトリの下記のブランチに取得している。
+  - remotes/リモート/ブランチ
+- git merge ワークツリーにマージする。
+  - git merge origin/master (origin/master の情報をワークツリーに統合という意味)
+
+### リーモートから情報を取得する（pull）
+- リモートから情報を取得してマージまで一度にやりたいとき
+- git pull リモート名 ブランチ名
+  - git pull　（リモート名、ブランチは省略可能※remote master　と同じになる。）
+- git pull　は 下記の二つのコマンドと同じ事
+  - git fetch origin master
+  - git merge origin/master
