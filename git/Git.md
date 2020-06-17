@@ -284,3 +284,119 @@ git config --list
 ### リベースでしてはいけないこと
 - Githubにプッシュしたコミットをリベースするのはダメ！
 - git push -f　は絶対ダメ！
+
+### マージとリベースのどちらを使うか
+- マージ
+  - コンフリクトの解決が比較的簡単
+  - まーじコミットがたくさんあると履歴が複雑化する
+  - 作業の履歴を残したいならマージ！
+- リベース
+  - 履歴をきれいに保てる
+  - コンフリクトの解決が若干面倒(コミットそれぞれに解消が必要)
+  - 履歴クォきれいにしたいならリベース！
+- プッシュしていないローカルの変更にはリベース、プッシュした後は絶対マージ。コンフリクトしそうならマージが無難。
+
+### プルの設定をリベースに変更する
+- プルにはマージ型とリベース型がある。
+- マージ型
+  - git pull リモート ブランチ
+  - マージコミットが残るので、マージしたという記録を残したい場合に適している。
+- リベース型
+  - git pull --rebase リモート ブランチ
+  - マージコミットが残らないので、guthubの内容を取得したいだけの時に適している。
+- デフォルトをリベース型にするには
+  - git config --global pull.rebase true
+  - git config branch.master.rebase true <br>(masterブランチでpullするときだけrebaseにしたい場合)
+
+### リベースで履歴を書き換える
+- コミットをきれいに整えてからpudhしたいときに使う。
+- **やっていいのはGithubにpushしていないコミットだけ！**
+- 直前のコミットだけやりなおすのなら、先述の　--amend　を使う。
+- 複数の場合は
+  - git rebase -i コミットID
+  - git rebase -i HEAD~3 (直前３つ（３世代）のコミットをやりなおし)
+  - git rebase -i HEAD^2 (マージした場合の2番目（２世代前）の親コミットをやりなおし)
+  - -i は--interactiveの略で、対話型リベース。やりとりしながら履歴を変更していくという意味。
+
+```
+git rebase -i HEAD~3
+
+#コミットエディタが立ち上がる
+pick gh21f6d ヘッダー修正
+pick 19305fa ファイル追加
+pick 48d5c04 README修正
+
+# やり直したいcommitをeditにする
+edit gh21f6d ヘッダー修正
+pick 19305fa ファイル追加
+pick 48d5c04 README修正
+
+#やりなおしたら実行する
+git commit --amend
+
+#次のコミットへ進む(リベース完了)
+git rebase --continue
+
+```
+
+##### コミットを並び替える、削除する。
+- 履歴は古い順に表示される（git log とは逆順）
+
+```
+git rebase -i HEAD~3
+
+#コミットエディタで、並び替えたり削除したりすることで、並び替え、削除ができる。
+pick gh21f6d ヘッダー修正
+pick 19305fa ファイル追加
+pick 48d5c04 README修正
+```
+##### コミットをまとめる
+
+```
+git rebase -i HEAD~3
+
+#scashを指定するとそのコミットを直前のコミットと一つにまとめられる。
+pick gh21f6d ヘッダー修正
+squash 19305fa ファイル追加
+squash 48d5c04 README修正
+```
+##### コミットを分割する
+
+```
+git rebase -i HEAD~3
+
+#READMEとindex修正を２つのコミットに分割する
+pick gh21f6d ヘッダー修正
+pick 19305fa ファイル追加
+edit 48d5c04 READMEとindex修正
+#保存してコミットエディタを終了
+
+git reset HEAD^
+git add README
+git commit -m 'README修正'
+git add index.html
+git commit -m 'index.html修正'
+git rebase --continue
+```
+
+### タグの一覧を表示する
+- git tag
+- パターンを絞り込んでタグを表示
+```
+git tag -i "201705"
+20170501_01
+20170501_02
+20170503_01
+```
+
+### タグつけする
+- 注釈付き(annotated)版と軽量(lightweight)版の2種類がある。
+- 注釈付き
+  - git tag -a タグ名 -m "メッセージ"
+  - タグ名、コメント意外に、自動的に署名（タグ作成者）も付加される。
+- 軽量版タグ
+  - git tag タグ名
+- 後からタグをつける場合(過去のコミットにタグつけ)
+  - git tag タグ名 コミット名
+- タグのデータを表示する
+  - git tag show タグ名 
