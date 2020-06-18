@@ -382,6 +382,7 @@ git rebase --continue
 ### タグの一覧を表示する
 - git tag
 - パターンを絞り込んでタグを表示
+
 ```
 git tag -i "201705"
 20170501_01
@@ -399,4 +400,34 @@ git tag -i "201705"
 - 後からタグをつける場合(過去のコミットにタグつけ)
   - git tag タグ名 コミット名
 - タグのデータを表示する
-  - git tag show タグ名 
+  - git tag show タグ名
+
+### タグをリモートリポジトリに送信する
+- タグをリモートに送信するには、git push で別途送信指定する。
+- git push リモート名 タグ名 (タグを個別に送信)
+- git push origin --tags (タグを一斉送信)
+  - ローカルにあって、リモートにないタグを一斉送信する。
+
+### 作業を一時避難する
+- git stash
+  - ワークツリーとステージには反映せずに、変更をstashに一時格納する。
+- git stash list
+  - 避難した作業の一覧を表示する。
+
+### 避難した作業を復元
+- git stash apply
+  - stageの状況までは復元されない。
+- git stash apply --index
+  - stageの状況も復元する。
+- 特定の作業を復元する。
+  - git stash apply スタッシュ名
+  - git stash apply stash@{1}
+
+### 避難した作業を削除する。
+- git stash drop
+  - 最新のstashを削除する。
+- 特定のstashを削除する。
+  - git stash drop スタッシュ名
+  - git stash drop stash@{1}
+- 全stashを削除する。
+  - git stash clear
