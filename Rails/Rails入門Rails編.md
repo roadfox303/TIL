@@ -63,6 +63,23 @@
 <%= link_to '完了', status_todo_path(todo, status:1),method: :patch %>
 #todo インスタンスに status:1 を指定してパッチしている。
 ```
+- showアクションなど、インスタンスへの情報を元にしたページへリンクする場合、aタグだとこのように
+
+```
+<% @blogs.each do |blog| %>
+
+#こう書くより
+<a href="<%= blog_path(blog.id)%>">
+  ソース
+</a>
+
+# こう書いた方が良いかもしれない。
+<%= link_to blog do %>
+  ソース
+<% end %>
+
+<% ebd %>
+```
 
 ### SCSS
 - scss は要素をネストして書く事ができる。
@@ -74,4 +91,75 @@ table {
         background-color: #ccc;
     }
 }
+```
+
+### scaffoldに関して
+- 失敗した場合、取り消すコマンドが用意されている。
+```
+bin/rails destroy scaffold テーブル名 オプション
+```
+
+### フォームの select　に関して
+```
+# ソースコード
+<% @categories = Category.all %>
+<%= select :todo, :category_id, @categories.map{|t| [t.name, t.id]} %>
+## select オブジェクト(テーブル) プロパティ名(カラム), フォームのoption用配列
+```
+```
+# HTML生成結果
+<select name="todo[category_id]" id="todo_category_id">
+  <option value="1">日常生活</option>
+  <option value="2">学校関係</option>
+</select>
+```
+
+- f. で利用するとオブジェクトが要らなくなる。（fがオブジェクトだから）
+```
+<%= f.select :category_id, @categories.map{|t| [t.name, t.id]} %>
+```
+
+##### オプション
+- include_blank: true
+  - 先頭に空のoptionを追加する。
+
+```
+<%= f.select :category_id, @categories.map{|t| [t.name, t.id]}, include_blank: true %>
+```
+
+### 便利メソッド
+##### try
+- 値が存在しなく nil だったら何もしない。
+- 値があれば値を取ってくる。
+- nil な値を持つレコードのせいでメソッドエラーが返るような場合に便利！
+- 機能拡張などで新たにDBのカラムを追加して、既存のレコードがエラーの原因になる際などに良さそう。
+```
+<%= todo.category.try(:name) %>
+#category.name に値があれば取得し、無かったら(nilなら)何もしない。
+```
+
+##### インスタンス からの
+
+
+### リレーション
+- モデルに記述する、has_many や belongs_to は、メソッドを追加するイメージ。
+```
+class User <ActiveRecord::Base
+has_many :blogs
+# User に blogs を扱うメソッドを追加しますよ。という感じ。
+```
+
+### パーシャル
+- パーシャルへ渡すインスタンスを呼び出し元で指定できる。
+```
+<%= render partial: 'todos_table', locals: { todos: @todos } %>
+```
+
+- 他モデルのパーシャルを利用できる。
+- パーシャルに渡すレコード一覧をパーシャルを読み込んでいるview内で取得できる。パーシャルは別ファイルだが、読み込み元と一枚のソースになるので、配列（メソッド）を共有できる。よく考えたら当たり前のこと。
+```
+# 通常は partial: 'todos_table'　のように同階層のディレクトリ内にあるパーシャルを読み込む。
+# しかしこのようにパスを指定する事で categories/show　から、todos/_todos_table.html.erb というパーシャルを読み込んでいる。
+<%= render partial: 'todos/todos_table', locals: { todos: @category.todos } %>
+# locals: { todos: @category.todos }　で、 @category の has_many な todo が todos配列 に map される感じでパーシャルに渡している。
 ```
