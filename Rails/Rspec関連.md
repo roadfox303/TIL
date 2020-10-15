@@ -77,3 +77,52 @@ RSpecのデフォルトの設定を、ドキュメント形式にする。
 ```
 bin/rspec
 ```
+### describe、context、it の使い分け
+- describe で目的の処理（アクションなど）、context で状況、it でふるまいの結果のように、入れ子で段組みすると、結果表示の際にもわかりやすいレイアウトになる。
+```
+# 文字列に一致する一致するメッセージを検索する
+describe "search message for a them" do
+  before do
+    @note1 = @project.notes.create(
+      message: "This is the first note.",
+      user: @user,
+    )
+  end
+  # 一致するデータが見つかるとき
+  context "when a match is found" do
+    # 検索文字列に一致するメモを返すこと
+    it "returns notes that match the search term" do
+      expect(Note.search("first")).to include(@note1, @note3)
+    end
+  end
+  # 一致するデータが１件も見つからないとき
+  context "when no match is found" do
+    # 空のコレクションを返すこと
+    it "returns an empty collection" do
+      expect(Note.search("message")).to be_empty
+    end
+  end
+end
+```
+
+## FactoryBot
+### メソッド
+##### create_list
+
+## Feature Spec
+### メソッド
+##### save_and_open_page
+- その時点の処理ステップの結果がhtmlとして保存される。
+- gem 'launchy' がインストールしてあれば、自動でブラウザに画面が立ち上がる。
+
+##### within
+- セレクタを制限（指定）する。下記の場合 css id="rails" 要素内の "リンクボタン" テキスト要素をクリックしている。
+```
+within "#rails" do
+  click_link "リンクボタン"
+end
+```
+
+##### using_wait_time(10)
+- ブラウザ表示が遅い機能をテストする際に使用する。Capybara が処理の完了をｘ秒間待つようになる。
+- using_wait_time　を使用することで、Ruby の sleep メソッドを使うのは避ける。
