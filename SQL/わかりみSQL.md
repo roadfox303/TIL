@@ -124,4 +124,23 @@ where name = 'Bob';
 # nameの昇順で表示
 select * from testtable1
 order by name;
+
+# heightの降順で表示
+select * from members
+order by height desc;
+
+# height の指定のみだと height が同じ行が複数ある場合、順序はどちらが先になるかは決まらず、時々による。
+# 下記のように複数の条件で並び替える事で順序を安定させることができる。（idは一意なので）
+select * from members
+order by height desc, id;
+
+# 二つ目以降の条件にも昇順降順を設定できる。
+select * from members
+order by height desc, id desc;
+```
+
+- 複合的な条件
+```
+select *from members
+where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
 ```
