@@ -99,6 +99,9 @@ delete from testtable1;
 
 ### データ検索
 - テーブルの全ての行を検索
+  - 構文は select（何を） from（どこから） where（どんな条件で取得するか） order（どんな順番で） の順。
+  - 実行順序は from → where → order → limit/offset → select の順番で実行される。※実は正確では無いがとりあえずそう覚えておく。
+  - from → where → group → having → order → limit/offset → select
 
 ```
 #全列の全行を取得
@@ -144,3 +147,56 @@ order by height desc, id desc;
 select *from members
 where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
 ```
+
+- 範囲を指定
+  - limit
+  ```
+  # 先頭から２行だけ出力
+  select * from members order by id limit 2;
+  ```
+  - offset
+  ```
+  # 先頭から４行は出力せずにスキップする
+  select * from members by id offset 4;
+  ```
+  - 組み合わせ
+  ```
+  # 先頭の3行をスキップして、次の１行だけを出力
+  select * from members order by id limit 1 offset 3;
+  ```
+
+- グループ化
+  - 集約関数が必要
+  - グループ化すると、select句、order句に指定できるのは「グループ化のキー」と「集約関数」だけ。
+  ```
+  # gender でグループ化し、それぞれの平均値を算出する。
+  select gender, avg(height) from members group by gender;
+  ```
+  - グループ化のキーにはテーブルの列名だけでなく、式も使える。
+  ```
+  # 名前の長さをキーにグループ化、それぞれの人数を数える。（列名を含めた式を）
+  select length(name), count(*) from members group by length(name);
+  ```
+
+- 集約関数
+  - 集約関数は group by していなくても select句 では使うことができる。where句 は group by句より先に実行されるので、集約関数を使うことができない。(whereで使用するにはサブクエリを利用する)
+  - sum() … 合計する。
+  - avg() … 平均する。
+  - max() … 最大値を調べる。
+  - min() … 最小値を調べる。
+  - count() … 行数を揃える。
+  - coalesce(x, y) … x が null でなければ x、null なら y を返す。
+  - string_agg() … 文字列を連結する。
+  - array_agg() … 複数の値を配列にする。
+  - json_object_agg() … JSONデータを作る。
+  - json_agg() … JSON配列を作る。
+  - having … group を 指定条件でフィルターする。
+  ```
+  # where は行を対象に条件選択、having はグループを対象に条件選択する。
+
+  # 性別でグループ化してから、平均身長が168cm以上のグループだけを表示。
+  select gender ,avg(height) from members group by gender having avg(height) >= 168;
+
+  # 性別でグループ化してから、３人以上のグループだけを表示。
+  select gender, count(*) from members group by gender having count(*) >= 3;
+  ```
