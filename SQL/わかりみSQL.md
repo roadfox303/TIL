@@ -191,6 +191,7 @@ where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
   - json_object_agg() … JSONデータを作る。
   - json_agg() … JSON配列を作る。
   - having … group を 指定条件でフィルターする。
+
   ```
   # where は行を対象に条件選択、having はグループを対象に条件選択する。
 
@@ -200,3 +201,38 @@ where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
   # 性別でグループ化してから、３人以上のグループだけを表示。
   select gender, count(*) from members group by gender having count(*) >= 3;
   ```
+
+### コメント
+- 二種類のコメントがある。
+  - -- の後には半角スペースが必要。
+
+```
+/*ここから
+
+ここまで*/
+
+-- ここから行末までコメント
+
+select * -- 行頭じゃなくてもコメント
+```
+
+### エイリアス
+- 列に別名を付けられる。
+  - 列は式の一種なので、式にも別名がつけられるということ。
+
+```
+select id as "ID", name as 名前, height as 身長 from members where gender = 'F';
+# id を "" で囲っているのは、SQLは大文字と小文字の区別をしないから。"" で囲むことで大文字を含められる。
+```
+
+- テーブルにも別名をつけられる。
+  - 「テーブル名 as 別名」または as を省略して「テーブル名 別名」で指定する。
+  - 列名に例えば select などをつけている場合 SQLキーワードと解釈されるため通常はアクセスできない。テーブル名にエイリアスを付けることで、m.select のような指定をすれば列名であると解釈されるため、select列にアクセスできる。
+```
+select m.id, m.name, m.height from members m where m.gender = 'F' order by m.id;
+# 上記の例では from members m で members のエイリアスを m と指定している。
+```
+
+- 列の別名は where句 では参照できない。order by句 では参照できる。
+  - テーブルの別名は where でも order でも使用できる。
+  - 列の別名は select（最後に処理される） で指定されるが、テーブルの別名は from(where、orderよりも先に処理される) で 指定されるため。 
