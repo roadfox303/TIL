@@ -185,6 +185,7 @@ where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
   - max() … 最大値を調べる。
   - min() … 最小値を調べる。
   - count() … 行数を揃える。
+  - length() … 値の長さを調べる。
   - coalesce(x, y) … x が null でなければ x、null なら y を返す。
   - string_agg() … 文字列を連結する。
   - array_agg() … 複数の値を配列にする。
@@ -202,6 +203,20 @@ where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
   select gender, count(*) from members group by gender having count(*) >= 3;
   ```
 
+- 複合値
+  - 数値や文字列、真偽値などを複数集めて組みにしたもの。異なるデータ型が混在していても良い。
+```
+select (1, 2, 3) = (1, 2, 3) #false
+select (1, 2, 3) <> (1, 2, 3) #true
+
+select ('2019-03-11'::date, 9) > ('2019-03-10'::date, 9) #true
+select ('2019-03-10'::date, 9) > ('2019-03-10'::date, 10) #false
+select ('2019-03-10'::date, 10) > ('2019-03-11'::date, 9) #false
+
+# ::date は日付型へのキャスト
+# 最初に１つ目の要素で比較、同じなら２つ目の要素で比較する。
+```
+
 ### コメント
 - 二種類のコメントがある。
   - -- の後には半角スペースが必要。
@@ -215,6 +230,73 @@ where (gender = 'M' and height >= 170) or (gender = 'F' and height < 170);
 
 select * -- 行頭じゃなくてもコメント
 ```
+
+### 演算子
+- <> … 等しく無い。
+- || … 文字列を結合する
+```
+select 'Hello' || 'World' || '!';
+# HelloWorld!
+```
+
+##### パターンマッチ演算子
+- like … パターンにマッチ true
+- not like … パターンにマッチしない true
+- ilike … パターンにマッチ（大文字小文字を区別しない） true
+- not ilike … パターンにマッチしない（大文字小文字を区別しない） true
+
+```
+select 'ミカサ' like '%サ'; # サで終わるパターンマッチ
+select 'サシャ' like 'サ%'; # サで始まるパターンマッ
+select 'サシャ' like 'サ__'; # サで始まる3文字のパターンマッチ
+select 'サシャ' like '%シ%'; # シが含まれるパターンマッチ
+select 'ベルトルト' like '%ル%ル%'; # ルが2回含まれるパターンマッチ
+select 'やまもとやま' like '%や%や%'; # やが2回含まれるパターンマッチ
+
+# 実際の使いかた。（ンで終わる名前だけ検索）
+select name from members where name like '%ン';
+```
+
+##### in演算子
+- in … 複数の値の中に指定の値が含まれている true
+- not in … 複数の値の中に指定の値が含まれていない true
+
+```
+select 7 in (3, 5, 7, 9);
+select 'zz' in ('xx', 'yy', 'zz');
+select 8 not in (3, 5, 7, 9);
+
+select * from members where name in ('エレン', 'ミカサ', 'アルミン') order by id;
+# 左辺の中に右辺の値が含まれているか？というような使い方。
+```
+
+##### null 関連
+- x = null のような構文では null を判別できない。
+  - null を用いた計算式は、結果自体が全てnullになってしまう。
+  - そこで下記の演算子を使用する。
+- is null … null なら true
+- is not null … null でないなら true
+```
+select x is null;
+select x in null, y is not null;
+```
+
+- coalesce() 関数
+  - 値が null だった場合に別の値に変換する。
+  - 第1引数と第2引数のデータ型が揃っていないとエラーになる。
+  ```
+  # x が null なら 0 を返す。null でなければ x の値を返す。
+  coalesce(x, 0)
+
+  # x が null なら 空文字 を返す。null でなければ x の値を返す。
+  coalesce(x, '')
+
+  # x が null なら false を返す。null でなければ x の値を返す。
+  coalesce(x, false)
+
+  # null でない最初の引数の値が返される(x が nullでなければ x が返され、x が null　かつ　y が null でなければ y が返され、x と y が共に null なら z が返される)
+  coalesce(x, y, z)
+  ```
 
 ### エイリアス
 - 列に別名を付けられる。
@@ -235,4 +317,4 @@ select m.id, m.name, m.height from members m where m.gender = 'F' order by m.id;
 
 - 列の別名は where句 では参照できない。order by句 では参照できる。
   - テーブルの別名は where でも order でも使用できる。
-  - 列の別名は select（最後に処理される） で指定されるが、テーブルの別名は from(where、orderよりも先に処理される) で 指定されるため。 
+  - 列の別名は select（最後に処理される） で指定されるが、テーブルの別名は from(where、orderよりも先に処理される) で 指定されるため。
