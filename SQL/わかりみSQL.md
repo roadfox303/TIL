@@ -5,6 +5,7 @@
 
 #dockerでのpostgreSQL11
 ```
+#初回作成時
 #コンテナ起動
 $ docker run --name postgres11 -d -e POSTGRES_PASSWORD=password postgres:11
 
@@ -28,6 +29,20 @@ $ psql -U user1 testdb1
 
 # psqlコマンドを抜ける
 $ \q
+
+```
+
+```
+#再起動時
+
+# コンテナ起動
+docker container start postgres11
+
+# DBコンテナのbash起動
+docker exec -it postgres11 bash
+
+#作成済みのユーザーでDBにアクセス
+psql -U user1 testdb1
 
 ```
 
@@ -274,7 +289,27 @@ select * from members where name in ('エレン', 'ミカサ', 'アルミン') o
 ##### exists演算子
 - 右辺にサブクエリを受け取り、１行でも結果を返したら true、１行も返さなかったらfalse
 - つまりはサブクエリで指定した条件に合う行が有るかどうかを調べる。
+- 存在確認するとき、counts() などで行を数えるよりも高速に処理できる。
 
+- exists (サブクエリ) … 条件に合う行が一つでもあれば true 無ければ false
+- not exists (サブクエリ) …  … 条件に合う行が無ければ true 一つでもあれば false
+```
+select exists (select * from test_scores where subject = '社会' and score = 100);
+```
+- exists (select 1 from ) と書かれる事があるが、これは「行の中身は使われないよ」 という事を示唆しているだけの事。hoge みたいなものなので深い意味はない。
+
+##### all演算子
+- all … サブクエリが返した値全てが条件に合っていれば true。ひとつでも条件と合わなかったら false。
+```
+# サブクエリの値が全てが40以上なら true
+select 40 <= all (select score from test_scores where subject = '算数');
+```
+
+##### any演算子
+- any … サブクエリが返した値の中に条件に合うものがあれば true。合うものがなければ false。
+```
+select 100 = any (select score from test_scores where subject = '理科');
+```
 
 ##### null 関連
 - x = null のような構文では null を判別できない。
@@ -387,3 +422,41 @@ select * from members where height > (select avg(height) from members);
   ```
   select * from students where id in (select student_id from test_scores where subject = '国語' and score = (select max(score) from test_scores where subject = '国語')) order by id;
   ```
+
+##### with句(CTE)
+- サブクエリに別名をつけることができる。
+- select より前に書く。
+
+```
+with x as (select subject, avg(score) as avg_score from test_scores group by subject)
+select x.subject, x.avg_score from x where x.avg_score < 70;
+```
+
+- サブクエリの列名（カラム名）にも別名をつけることができる。
+  - リーディングの際にサブクエリ内の select句 を確認しなくてもよくなって便利。
+
+```
+with x(subject, avg_score) as (select subject, avg(score) ※1
+    from test_scores group by subject
+  )
+select x.subject, x.avg_score from where x.avg_score < 70;
+
+# ※1 本来はここで[as avg_score]というふうにエイリアスを付けるが、それをwith句で付けられるということ。
+# この例では select句 で xテーブル(導出テーブル) を直に参照しているので　where x.avg_score < 70　という使い方で問題ない。
+```
+```
+with x(max_score) as ( select max(score)
+    from test_scores where subject = '国語'
+  )
+select t.student_id, t.score
+from test_scores t
+where t.subject = '国語' and t.score = ( select x.max_score from x)
+order by t.student_id;
+
+# where t.subject = '国語' and t.score = ( select x.max_score from x) これを
+# where t.subject = '国語' and t.score = x.max_score とは書けない。
+# この例では select句 で tテーブルを参照しているが、
+
+
+```
+ddd
