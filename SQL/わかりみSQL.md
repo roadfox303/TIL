@@ -450,7 +450,7 @@ with x(max_score) as ( select max(score)
   )
 select t.student_id, t.score
 from test_scores t
-where t.subject = '国語' and t.score = ( select x.max_score from x)
+where t.subject = '国語' and t.score = x.max_score
 order by t.student_id;
 
 # where t.subject = '国語' and t.score = ( select x.max_score from x) これを
@@ -459,4 +459,4 @@ order by t.student_id;
 
 
 ```
-ddd
+with x(max_score) as ( select max(score) from test_scores where subject = '国語')select t.student_id, t.score from test_scores t where t.subject = '国語' and t.score = (select x.max_score from x) order by t.student_id;
