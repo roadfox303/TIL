@@ -482,5 +482,80 @@ where avg_score = (
     select min(x.avg_score) from avg_scores x
   );
 ```
+## ■テーブル結合
+##### from句 と where句 でテーブル結合
+- SQLでのテーブル結合は２つの操作からなる
+  - 全ての組み合わせを生成
+  - 条件に合った組み合わせだけを選ぶ
+
+```
+# 全ての行の組み合わせ
+select movies.*, characters.* from movies, characters;
+
+# 全ての行の組み合わせから movie_id が一致(moviesテーブル、charactersテーブル双方で)する組み合わせだけを選ぶ。(movie_id が外部キーになっている感じ)
+select movies.*, characters.* from movies, characters where movies.movie_id = characters.movie_id;
+
+# エイリアスを付けて見やすく
+select m.*, c.* from movies m, characters c where m.movie_id = c.movie_id;
+```
+
+##### join 演算子
+- 下記の例 B は検索条件である where句 にテーブル結合条件(m.movie_id = c.movie_id)が入り込んでいる形になるので、どれが結合条件なのか、検索条件なのかがわかりにくい。
+- そこで join を使うことで、where句 とは分離して結合条件を記述することができる。条件が整理されてわかりやすい。例 C。
+- 主役となるテーブルを from句 に、補助となるテーブルを join演算子に指定するとわかりやすい。
+
+```
+# A.先の例(全ての行の組み合わせから movie_id が一致した組み合わせだけを選ぶ)
+select m.*, c.*
+from movies m, characters c
+where m.movie_id = c.movie_id;
+
+# B.さらに女性キャラクターだけを抜き出す。
+select m.*, c.*
+from movies m, characters c
+where m.movie_id = c.movie_id
+  and c.gender = 'F';
+
+# C.joinを使ってテーブル結合条件をwhere句から分離。
+select *
+from movies m
+  join characters c
+    on m.movie_id = c.movie_id
+where c.gender = 'F';
+```
+- サブクエリとの比較(どちらも結果は同じ)
+```
+# 「となりのトトロ」のキャラクターを検索(テーブル結合)
+select c.*, m.*
+from characters c
+  join movies m
+    on c.movie_id = m.movie_id
+where m.title = 'となりのトトロ'
+order by c.id;
+
+# 「となりのトトロ」のキャラクターを検索(サブクエリ)
+select c.*
+where c.movie_id in (
+    select m.movie_id from movies m
+    where m.title = 'となりのトトロ'
+  )
+order by c.id;
+```
+
+- using
+  - on のかわりに using を使う。簡潔に書くことができる。
+  - on は = 以外にも演算子を使えるが using は そもそも演算子が使えない。
+  - on は名前が違う列を結合できるが、 using は同じ名前の列しか結合できない。
+  - 複数の列名を使って結合する時には特に便利。（例は わかりみSQL 162ページを参照）
+```
+# on c.movie_id = m.movie_id が useing (movie_id) に置き換えられる。
+
+select c.*, m.*
+from characters c
+  join movies m
+    using (movie_id)
+where m.title = 'となりのトトロ'
+order by c.id;
+```
 
 ## ■リファクタリング
