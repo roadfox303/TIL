@@ -455,8 +455,32 @@ order by t.student_id;
 
 # where t.subject = '国語' and t.score = ( select x.max_score from x) これを
 # where t.subject = '国語' and t.score = x.max_score とは書けない。
-# この例では select句 で tテーブルを参照しているが、
-
+# この例では from句 で tテーブルを参照しているが、x は from で参照されていない。そのため(x を from で参照しないと)サブクエリでなく変数と解釈されてしまうため。
 
 ```
-with x(max_score) as ( select max(score) from test_scores where subject = '国語')select t.student_id, t.score from test_scores t where t.subject = '国語' and t.score = (select x.max_score from x) order by t.student_id;
+
+##### サブクエリを一時テーブルとみなす
+- with句 を使うとサブクエリの実行結果を一時テーブル(temporary table)として使うことができる。
+  - from句でつけた別名をwhere句で使うとエラーになる
+  - 下記の例のように、where句では、from句でつけたエイリアス名(avg_scores)を、さらに別のエイリアス名(x)で使用する必要がある。
+- 実際に一時テーブルに格納されている。これを実体化(Materialize)という。これが通常のサブクエリとwith句とで大きく違う点。
+  - 利点：サブクエリの実行順序を手動で細かく指定できる。（通常は実行順序はDBエンジン任せだが、それだと効率が悪くなる時がある。そういうときに手動は便利）
+  - 欠点：サブクエリに対する最適化が効かない場合がある。つまりは、with句を使わない方が高速になることがある。
+  - 高速化には経験と深い知識が必要なので、初学のうちは高速化(最適化)よりも、正しいSQLを意識する。
+  - 最適化に対する項は [わかりみSQL 147〜149ページ を参照]
+
+```
+# 平均点が一番低い教科を、平均点つきで検索している
+with avg_scores(subject, avg_score) as (
+    select subject, avg(score)
+    from test_scores
+    group by subject
+  )
+select subject, avg_score
+from avg_scores
+where avg_score = (
+    select min(x.avg_score) from avg_scores x
+  );
+```
+
+## ■リファクタリング
