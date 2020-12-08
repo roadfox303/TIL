@@ -1,0 +1,62 @@
+<html>
+  <head>
+    <title>FirebaseTutorial</title>
+  </head>
+  <body>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-app.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+         https://firebase.google.com/docs/web/setup#available-libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.1.2/firebase-firestore.js"></script>
+    <script>
+      // Your web app's Firebase configuration
+      var firebaseConfig = {
+        apiKey: "AIzaSyD5i_vIkp1LkMBRuoRA8h7Wn734--S6ujQ",
+        authDomain: "fir-tutorial-5391c.firebaseapp.com",
+        projectId: "fir-tutorial-5391c",
+        storageBucket: "fir-tutorial-5391c.appspot.com",
+        messagingSenderId: "985923661817",
+        appId: "1:985923661817:web:6be0d5dc1a07274eead728"
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+    </script>
+    <div id="messages"></div>
+
+    <div>
+      <textarea name="massage" rows="8" cols="80" id="message"></textarea>
+      <button id="submit">送信</button>
+    </div>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const db = firebase.firestore();
+        const submitElement = document.querySelector("#submit")
+
+        submitElement.addEventListener('click', () => {
+          var text = document.querySelector("#message").value ;
+
+          db.collection("massages").add({
+              body: text
+          })
+          .then(function(docRef) {
+              console.log("Document written with ID: ", docRef.id);
+          })
+          .catch(function(error) {
+              console.error("Error adding document: ", error);
+          });
+        })
+        // db.collection("users").get().then((querySnapshot) => {
+        //     querySnapshot.forEach((doc) => {
+        //         console.log(`${doc.id} => ${doc.data()}`);
+        //     });
+        // });
+        db.collection("cities").doc("SF")
+        .onSnapshot(function(doc) {
+            console.log("Current data: ", doc.data());
+        });
+      })
+    </script>
+  </body>
+</html>
