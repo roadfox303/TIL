@@ -278,3 +278,16 @@ $ sudo systemctl is-enabled httpd.service
 - 本番環境
 - DB詳細の指定
 - [詳細設定]の設定
+
+#### 4.データベースソフトのインストール(MySQL)
+- WebサーバにMySQLをインストール
+  ```
+  [ec2-user@ip-10-0-10-10 ~]$ sudo yum -y install mysql
+  ```
+- WebサーバからRDSへmysqlコマンドで接続
+```
+[ec2-user@ip-10-0-10-10 ~]$ mysql -h aws-and-infra-web.cndc8voqvqnw.ap-northeast-1.rds.amazonaws.com -u root -p
+# -h(エンドポイントを指定) エンドポイント(awsコンソールマネジメント>RDS>データベース>接続とセキュリティで確認)
+# -u(ユーザー名を指定) ユーザー名
+# -p(パスワード入力)
+```
