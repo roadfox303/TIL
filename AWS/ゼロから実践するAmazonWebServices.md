@@ -286,8 +286,57 @@ $ sudo systemctl is-enabled httpd.service
   ```
 - WebサーバからRDSへmysqlコマンドで接続
 ```
+# mysqlへ接続
+
 [ec2-user@ip-10-0-10-10 ~]$ mysql -h aws-and-infra-web.cndc8voqvqnw.ap-northeast-1.rds.amazonaws.com -u root -p
 # -h(エンドポイントを指定) エンドポイント(awsコンソールマネジメント>RDS>データベース>接続とセキュリティで確認)
 # -u(ユーザー名を指定) ユーザー名
 # -p(パスワード入力)
 ```
+---
+### 【EC2】WordPress を構築しよう
+1. WordPress用のデータベース作成
+  - データベース作成
+  ```
+  MySQL [(none)]> CREATE DATABASE aws_and_infra DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+  # DEFAULT CHARACTER SET utf8：デフォルトの文字セットはutf8という意味
+  #
+  ```
+  - ユーザー作成
+  ```
+  MySQL [(none)]> CREATE USER 'aws_and_infra'@'%' IDENTIFIED BY 'password';
+  # 'ユーザー名'@'接続元のホスト'  (接続元ホストの'%'はどこでもOKという意味)
+  # IDENTIFIED BY '接続時のパスワード指定'
+  ```
+  - ユーザーに権限付与
+  ```
+  # 権限を設定
+  MySQL [(none)]> GRANT ALL ON aws_and_infra.* TO 'aws_and_infra'@'%';
+  # GRANT(権限設定コマンド) ALL(全ての操作) aws_and_infra.* (aws_and_infraデータベースの全てのテーブル)
+  # TO 'aws_and_infra'@'%'; GRANT コマンドで権限を設定する対象のユーザーを指定している
+
+  # 設定をMySQLへ反映するコマンド
+  MySQL [(none)]> FLUSH PRIVILEGES;
+
+  # ユーザーを確認
+  SELECT USER , host FROM mysql.user;
+
+  # 作成したユーザーでMySQLにログインする際は、ユーザー作成したときのユーザー名を指定する。
+  [ec2-user@ip-10-0-10-10 ~]$ mysql -h aws-and-infra-web.cndc8voqvqnw.ap-northeast-1.rds.amazonaws.com -u aws_and_infra -p
+  ```
+2. WordPressのインストール
+  - ライブラリのインストール
+  ```
+  # php7.2のインストール
+  [ec2-user@ip-10-0-10-10 ~]$ sudo amazon-linux-extras install -y php7.2
+
+  # phpのバージョンに対応したライブラリをインストール
+  [ec2-user@ip-10-0-10-10 ~]$ sudo yum install -y php php-mbstring
+  ```
+  - WordPressのダウンロード
+  - WordPressの解凍
+  - WordPressのプログラムをApacheから見える場所に配置
+  - WordPressファイルの所有者グループを変更
+  - Apacheの再起動
+
+3. WordPressの設定
