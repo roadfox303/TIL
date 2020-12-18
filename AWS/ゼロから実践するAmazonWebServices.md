@@ -281,10 +281,12 @@ $ sudo systemctl is-enabled httpd.service
 
 #### 4.データベースソフトのインストール(MySQL)
 - WebサーバにMySQLをインストール
+
   ```
   [ec2-user@ip-10-0-10-10 ~]$ sudo yum -y install mysql
   ```
 - WebサーバからRDSへmysqlコマンドで接続
+
 ```
 # mysqlへ接続
 
@@ -297,18 +299,21 @@ $ sudo systemctl is-enabled httpd.service
 ### 【EC2】WordPress を構築しよう
 1. WordPress用のデータベース作成
   - データベース作成
+
   ```
   MySQL [(none)]> CREATE DATABASE aws_and_infra DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
   # DEFAULT CHARACTER SET utf8：デフォルトの文字セットはutf8という意味
   #
   ```
   - ユーザー作成
+
   ```
   MySQL [(none)]> CREATE USER 'aws_and_infra'@'%' IDENTIFIED BY 'password';
   # 'ユーザー名'@'接続元のホスト'  (接続元ホストの'%'はどこでもOKという意味)
   # IDENTIFIED BY '接続時のパスワード指定'
   ```
   - ユーザーに権限付与
+
   ```
   # 権限を設定
   MySQL [(none)]> GRANT ALL ON aws_and_infra.* TO 'aws_and_infra'@'%';
@@ -326,6 +331,7 @@ $ sudo systemctl is-enabled httpd.service
   ```
 2. WordPressのインストール
   - ライブラリのインストール
+
   ```
   # php7.2のインストール
   [ec2-user@ip-10-0-10-10 ~]$ sudo amazon-linux-extras install -y php7.2
@@ -334,9 +340,96 @@ $ sudo systemctl is-enabled httpd.service
   [ec2-user@ip-10-0-10-10 ~]$ sudo yum install -y php php-mbstring
   ```
   - WordPressのダウンロード
+
+  ```
+  [ec2-user@ip-10-0-10-10 ~]$ wget https://ja.wordpress.org/latest-ja.tar.gz
+  ```
   - WordPressの解凍
+
+  ```
+  [ec2-user@ip-10-0-10-10 ~]$ tar xzvf latest-ja.tar.gz
+  ```
   - WordPressのプログラムをApacheから見える場所に配置
+
+  ```
+  [ec2-user@ip-10-0-10-10 ~]$ cd wordpress
+  [ec2-user@ip-10-0-10-10 wordpress]$ sudo cp -r * /var/www/html/
+  # wordpressディレクトリのファイルを全て /var/www/html/ ディレクトリにコピーしている
+  # ブラウザ から Apatchにアクセスがあると /var/www/html/ 以下にあるファイルを返す。
+  ```
   - WordPressファイルの所有者グループを変更
+
+  ```
+  [ec2-user@ip-10-0-10-10 wordpress]$ sudo chown apache:apache /var/www/html/ -R
+  # apache:apache  ファイルの所有者:所有グループ
+  # /var/www/html/ -R  指定ディレクトリ以下のファイルを全て対象にする。
+  ```
   - Apacheの再起動
 
+  ```
+  # Apache の起動状態を確認
+  [ec2-user@ip-10-0-10-10]$ sudo systemctl status httpd.service
+
+  # アパッチを再起動
+  [ec2-user@ip-10-0-10-10]$sudo systemctl restart httpd.service
+
+  # アパッチが起動していない場合は下記のコマンドで起動できる
+  [ec2-user@ip-10-0-10-10]$ sudo systemctl start httpd.service
+  ```
+
 3. WordPressの設定
+  - ブラウザでドメイン名でアクセス
+
+---
+
+### TCP/IPについて
+
+- TCP/IP は TCPやIPを中心として、インターネットを構築する上で必要なプロトコル群の総称。
+- TCI/IP では、インターネットでコンピュータが通信する一連の処理を４階層で表現する。
+
+|レイヤー|役割|プロトコル例|
+|:---:|:---:|:---:|
+|アプリケーション層|アプリケーション同士が会話する|HTTP、DNS、SSH、SMTP|
+|トランスポート層|データの転送を制御する|TCP、UDP|
+|ネットワーク層|IPアドレスを管理し、経路選択する|IP、ICMP、ARP|
+|ネットワークインターフェース層|直接接続された機器同士で通信する|Ethernet、PPP|
+
+#### HTTP
+###### HTTP リクエストの中身
+- リクエストライン、ヘッダー、ボディから構成される
+|||
+|:---:|:---:|
+|リクエストライン|GET / HTTP/1.1|
+|ヘッダー|Host: example.com<br>User-Agent: Mozilla/5.0<br>Accept-Encording: qzip, deflate<br>Connection: keep-alive|
+|ボディ|特になし（オプション）|
+
+###### HTTP レスポンスの中身
+- ステータスライン、ヘッダー、ボディから構成される
+|||
+|:---:|:---:|
+|ステータスライン|HTTP/1.1 200 OK|
+|ヘッダー|Date: Fri, 28, Jun 2020 01:09:23 GMT<br>Content-Type: text/html; charset=UTF8<br>Cache-Control: max-age=604800<br>Last-Modified: Fri, 09 Aug 2018 23:54:32 GMT|
+|ボディ|コンテンツそのもの(htmlなど)|
+
+#### TCP、UD
+- トランスポート層はアプリケーション間のコネクション確率、切断を行う。
+- どのアプリケーションと通信するか指定する役割を持つ。
+  - アプリケーションの指定はポート番号
+
+###### TCP
+- 信頼性のある通信を提供
+- 信頼性を保つために、送信するパケットの順序制御や再送制御を行う。
+- シーケンス番号と確認応答を使用することで再送制御などを行う。
+- 通信相手とコネクションを確立し、通信準備をしてから通信を行う。
+
+###### UDP
+- 高速だが信頼性のない通信
+- 送信するだけで、届く順序や、パケットが届いたかの保証はしない
+- 高速でリアルタイム性を重視する通信で使用する。
+
+#### IP
+- IPの役割は、IPアドレス、終点コンピュータまでのパケット配送（ルーティング）、パケットの分割、再構築処理の３つ。
+  - IPアドレス：ネットワーク上で通信を行う宛先を識別する。
+  - ルーティング：宛先IPアドレスのコンピュータまでパケットを届ける。
+  - パケットの分割・再構築処理：各ネットワークインターフェースの最大転送単位より小さくなるようにパケットを分割して送信、終点コンピュータで再構築する。
+- IPヘッダーに、送信元IPアドレスと宛先IPアドレスが含まれている。
