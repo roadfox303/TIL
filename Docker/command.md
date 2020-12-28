@@ -30,3 +30,8 @@ $ docker-compose ps
 ```
 $ docker exec -it DBコンテナ名 bash
 ```
+
+##### Docker　statusのチェック
+```
+sudo service docker status
+```
