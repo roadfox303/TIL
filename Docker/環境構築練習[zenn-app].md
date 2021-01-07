@@ -4,6 +4,7 @@
 
 ##### ● docker-compose run backend rails new . --api --force --database=mysql --skip-bundle でエラー
 - すでに bundler が入っているから？gem install bundler:2.0.1 は不要だった。
+- と思ったが、apt-get は Ubuntu のコマンドのようで実行できないっぽい。yumコマンドで置き換える事にする。
 
   ```
   # エラー内容
