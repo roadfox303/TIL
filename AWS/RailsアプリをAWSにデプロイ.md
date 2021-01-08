@@ -152,3 +152,24 @@
 
 - ファイアウォールを設定
 - dockerファイルは複数(nginx、postgres、rails、などそれぞれ)に分けて書いても良い。
+
+
+## AWS＋Nginx＋Unicorn 環境を設定しての デプロイ
+参考にした記事
+- https://qiita.com/Takao_/items/b18234b8db4cda97a113
+
+## 発生したエラーと解決
+##### ec2インスタンスサーバ上での bundle install --path vendor/bundle
+1. An error occurred while installing ovirt-engine-sdk (4.4.0), and Bundler cannot continue.
+  - https://qiita.com/takahirotakumi1/items/a2241b5cb9da72743f61
+2. An error occurred while installing pg (1.2.3), and Bundler cannot continue.
+  - https://qiita.com/tdrk/items/812e7ea763080e147757
+
+##### db:create が Connection timed out してしまう。
+https://gyazo.com/c2e3a37e7d313bf12ef863b1978ea2e3
+- [解決]datebase.yml で指定するエンドポイントが間違っていた。
+  - ec2インスタンスのドメインではなく、RDSのエンドポイントを指定する必要がある。awsコンソールで以下の場所で確認できる。
+  - RDS > データベース > 指定のインスタンス(db-petlog) > 接続とセキュリティ
+
+##### 記事の通り進めて、アプリのログイン画面まで行ったが、表示がおかしい(css効いてない)＆サインアップするとエラー
+- ActionController::InvalidAuthenticityToken
