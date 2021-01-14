@@ -154,6 +154,9 @@
 - dockerファイルは複数(nginx、postgres、rails、などそれぞれ)に分けて書いても良い。
 
 
+
+
+
 ## AWS＋Nginx＋Unicorn 環境を設定しての デプロイ
 参考にした記事
 - https://qiita.com/Takao_/items/b18234b8db4cda97a113
@@ -173,3 +176,13 @@ https://gyazo.com/c2e3a37e7d313bf12ef863b1978ea2e3
 
 ##### 記事の通り進めて、アプリのログイン画面まで行ったが、表示がおかしい(css効いてない)＆サインアップするとエラー
 - ActionController::InvalidAuthenticityToken
+
+##### credential.yml.enc と master.key を設定していなかった
+- credential.yml.enc はハッシュ化されているので、直接編集してはいけない。
+```
+# このコマンドで編集する
+$ sudo EDITOR=vim rails credentials:edit
+```
+- 本番環境はリモートリポジトリから clone や pull しているので master.key がない(gitignoreしているから)ので下記の方法で設定する。
+- 環境変数に記述する方法。https://qiita.com/NaokiIshimura/items/2a179f2ab910992c4d39
+- 生成する方法。https://qiita.com/gyu_outputs/items/4653f625ffabc7318a8a
