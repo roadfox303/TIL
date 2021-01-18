@@ -186,3 +186,27 @@ $ sudo EDITOR=vim rails credentials:edit
 - 本番環境はリモートリポジトリから clone や pull しているので master.key がない(gitignoreしているから)ので下記の方法で設定する。
 - 環境変数に記述する方法。https://qiita.com/NaokiIshimura/items/2a179f2ab910992c4d39
 - 生成する方法。https://qiita.com/gyu_outputs/items/4653f625ffabc7318a8a
+- 今回は環境変数に設定する事にした。
+
+##### secret_key_base を設定していなかった
+- 本番環境では必要
+https://qiita.com/maru1124_/items/e83f07fbad5ebe4355d1
+- 下記のコマンドで出てきたハッシュをコピーしてENVに追加
+```
+$ bundle exec rake secret
+```
+
+##### config/unicorn/production.rb を作成していなかった
+- 恐らく config/unicorn.rb に各環境分に記述するなど、いくつかの方法があると思われるが、今回は config/unicorn/development.rb、config/unicorn/production.rb、と分けて記述する。
+
+# 経過
+##### 現状
+- unicorn.stderr.log で下記のように怒られている。password　が違うという事だが、恐らくは username が root になっていない事が原因。環境変数はrootになっているのだが・・・。
+```
+I, [2021-01-18T21:05:33.965508 #5563]  INFO -- : unlinking existing socket=/var/www/petlog/tmp/sockets/unicorn.sock
+I, [2021-01-18T21:05:33.966336 #5563]  INFO -- : listening on addr=/var/www/petlog/tmp/sockets/unicorn.sock fd=11
+E, [2021-01-18T21:05:33.984507 #5563] ERROR -- : FATAL:  password authentication failed for user "petlog"
+FATAL:  password authentication failed for user "petlog"
+ (PG::ConnectionBad)
+
+```
