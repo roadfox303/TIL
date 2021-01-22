@@ -26,123 +26,129 @@
 - ドメインを購入
 - Route53でDNSを設定
 
-8. server から github へ SSH 接続できるようにする
+8. EC2 に Dockerをインストール
+- https://qiita.com/shinespark/items/a8019b7ca99e4a30d286
+- 上記を参考にただしインストールするcomposeは新しいバージョンを適宜指定する。
+```
+[root@ip-10-0-10-10 ~]# curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+```
+
+7. dockerファイル を作成
+- アプリのルートディレクトリを作成
+```
+[ec2-user@ip-10-0-10-10 ~]$ mkdir petlog
+[ec2-user@ip-10-0-10-10 ~]$ cd petlog
+```
+- Nginxコンテナディレクトリの作成
+```
+[ec2-user@ip-10-0-10-10 petlog]$ mkdir -p containers/nginx
+```
+- 環境変数用ディレクトリの作成
+```
+[ec2-user@ip-10-0-10-10 petlog]$ mkdir environments
+```
+- rails の dockerfile をvimで作成。
   ```
-  [ec2-user@ip-10-0-10-10 ~]$ cd .ssh
-  [ec2-user@ip-10-0-10-10 .ssh]$ ssh-keygen -t rsa
-  Enter file in which to save the key (/home/ec2-user/.ssh/id_rsa): petlog_git_rsa
-  #petlog_git_rsaという名前で鍵を生成
-
-  [ec2-user@ip-10-0-10-10 .ssh]$ ls
-  authorized_keys  petlog_git_rsa  petlog_git_rsa.pub
-  [ec2-user@ip-10-0-10-10 .ssh]$ cat petlog_git_rsa.pub
-  #中身をコピー
-  ```
-  - Github の profileアイコンのメニュー > Settings > SSH and GPG keys の New SSH key でkeyを新規作成し中身を貼り付ける。
-
-  ```
-  [ec2-user@ip-10-0-10-10 .ssh]$ vim config
-  -------------------------------------------
-  Host github
-    Hostname github.com
-    User git
-    IdentityFile ~/.ssh/petlog_git_rsa (#先ほど作成した秘密鍵のpath)
-  -------------------------------------------
-
-  [ec2-user@ip-10-0-10-10 .ssh] $ sudo chmod 600 config
-  [ec2-user@ip-10-0-10-10 .ssh] $ ssh -T github
-
-  Warning: Permanently added 'github.com,13.114.40.48' (RSA) to the list of known hosts.
-  Hi roadfox303! You've successfully authenticated, but GitHub does not provide shell access.
-  # EC2のサーバからGithubへSSH接続成功
-  ```
-
-9. EC2インスタンスの環境設定
-- 参考：https://qiita.com/Takao_/items/b18234b8db4cda97a113
-- 注意)参考URLの例は develop環境 なため、一部 production 環境用に改変が必要。
-  ```
-  # EC2にログイン
-  $ ssh -i aws-test.pem ec2-user@パブリックIPアドレス
-
-  # gitのインストール
-  $ sudo yum install git -y
-
-  # node.jsのインストール
-  $ sudo rpm -Uvh https://rpm.nodesource.com//pub_10.x/el/6/x86_64/nodejs-10.3.0-1nodesource.x86_64.rpm
-
-  # dependencies for rails のインストール
-  $ sudo yum install gcc gcc-c++ libyaml-devel libffi-devel libxml2 libxslt libxml2-devel libslt-devel -y
-
-  # yarn のインストール
-  $ sudo npm install yarn  -g
-
-  # yarn のチェックファイル
-  $ sudo yarn install --check-files
-
-  # git-core のインストール
-  $ sudo yum install git-core
-
-  # rbenvのクローン
-  $ git clone https://github.com/rbenv/rbenv.git ~/.rbenv
-
-  # rbenvのpath設定
-  $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
-  $ vi ~/.bash_profile
+  [ec2-user@ip-10-0-10-10 petlog]$ vim Dockerfile
   ```
   ```
-  # .bash_profile
+  ### Dockerfile ###
 
-  # Get the aliases and functions
-  if [ -f ~/.bashrc ]; then
-          . ~/.bashrc
-  fi
+  # 19.01.20現在最新安定版のイメージを取得
+  FROM ruby:2.6.3
 
-  # User specific environment and startup programs
+  # 必要なパッケージのインストール（基本的に必要になってくるものだと思うので削らないこと）
+  RUN apt-get update -qq && \
+      apt-get install -y build-essential \
+                         libpq-dev \
+                         nodejs
 
-  PATH=$PATH:$HOME/.local/bin:$HOME/bin
+  # 作業ディレクトリの作成、設定
+  RUN mkdir /webapp
+  WORKDIR /webapp
 
-  export PATH
-  export PATH="$HOME/.rbenv/bin:$PATH"
-  eval "$(rbenv init -)"  ← #追加
+  # ホスト側（ローカル）のGemfileを追加する（ローカルのGemfileは【３】で作成）
+  ADD ./Gemfile /webapp/Gemfile
+  ADD ./Gemfile.lock /webapp/Gemfile.lock
+
+  # Gemfileのbundle install
+  RUN bundle install
+  ADD . /webapp
+
+  # puma.sockを配置するディレクトリを作成
+  RUN mkdir -p tmp/sockets
+  ```
+- gemfile を作成
+  ```
+  [ec2-user@ip-10-0-10-10 petlog]$ vim Gemfile
   ```
   ```
-  # bash_profileの反映
-  $ source ~/.bash_profile
+  ### gemfile ###
 
-  # Avoid to Install rb-docs
-  $ echo 'gem: --no-document' >> ~/.gemrc
-
-  # ruby-build
-  $ git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
-
-  # dependencies for ruby-build
-  $ sudo yum install bzip2 gdbm-devel openssl-devel libffi-devel libyaml-devel ncurses-devel readline-devel zlib-devel -y
-
-  # rubyインストール
-  $ RUBY_CONFIGURE_OPTS=--disable-install-doc ~/.rbenv/bin/rbenv install 2.6.3
-
-  # Set default Ruby version
-  $ rbenv global 2.6.3 && rbenv rehash
-
-  # bundler のインストール
-  $ gem install bundler -v 2.1.0
-
-  # rbenv-rehash
-  $ gem install rbenv-rehash
-
-  # rails のインストール
-  $ gem install rails -v 5.2.4.3
-
-  # インストールの確認
-  $ ruby -v
-  ruby 2.6.3p62 (2019-04-16 revision 67580) [x86_64-linux]
-  $ rails -v
-  Rails 5.2.4.3
-  $ bundler -v
-  Bundler version 2.1.0
+  source 'https://rubygems.org'
+  gem 'rails', '~> 5.2.4', '>= 5.2.4.3'
   ```
-10. nginx の導入
-11. unicorn の導入
+- gemfile.lock を作成(中身は空で良い)
+  ```
+  [ec2-user@ip-10-0-10-10 petlog]$ touch Gemfile.lock
+  ```
+- Nginx用 Dockerfile 作成
+  ```
+  [ec2-user@ip-10-0-10-10 petlog]$ vim containers/nginx/Dockerfile
+  ```
+  ```
+  ### Dockerfile ###
+
+  FROM nginx:1.15.8
+
+  # インクルード用のディレクトリ内を削除
+  RUN rm -f /etc/nginx/conf.d/*
+
+  # Nginxの設定ファイルをコンテナにコピー
+  ADD nginx.conf /etc/nginx/conf.d/webbapp.conf
+
+  # ビルド完了後にNginxを起動
+  CMD /usr/sbin/nginx -g 'daemon off;' -c /etc/nginx/nginx.conf
+  ```
+- Nginx設定ファイル
+  ```
+  ### nginx.conf ###
+
+  # プロキシ先の指定
+  # Nginxが受け取ったリクエストをバックエンドのpumaに送信
+  upstream webapp {
+    # ソケット通信したいのでpuma.sockを指定
+    server unix:///webapp/tmp/sockets/puma.sock;
+  }
+
+  server {
+    listen 80;
+    # ドメインもしくはIPを指定
+    server_name petlog.cyou [or 3.113.163.147 [or localhost]];
+
+    access_log /var/log/nginx/access.log;
+    error_log  /var/log/nginx/error.log;
+
+    # ドキュメントルートの指定
+    root /webapp/public;
+
+    client_max_body_size 100m;
+    error_page 404             /404.html;
+    error_page 505 502 503 504 /500.html;
+    try_files  $uri/index.html $uri @webapp;
+    keepalive_timeout 5;
+
+    # リバースプロキシ関連の設定
+    location @webapp {
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header Host $http_host;
+      proxy_pass http://webapp;
+    }
+  }
+  ```
+
+
 
 - ファイアウォールを設定
 - dockerファイルは複数(nginx、postgres、rails、などそれぞれ)に分けて書いても良い。
