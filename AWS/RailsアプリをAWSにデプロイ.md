@@ -204,3 +204,8 @@ FATAL:  password authentication failed for user "petlog"
  (PG::ConnectionBad)
 
 ```
+
+- 上記のエラー（環境変数系のエラー）で手動デプロイが非常に面倒だったので、capistrano による自動デプロイの準備を整えている。(ローカルで capistrano の各種設定中)
+  - 参考：https://qiita.com/ichihara-development/items/1ad4b5d8f29c63bf97f5#nginx
+  - 参考：https://bagelee.com/programming/ruby-on-rails/capistrano/
+  - 参考：https://qiita.com/tkykmw/items/a34441aae142e0e41b65
