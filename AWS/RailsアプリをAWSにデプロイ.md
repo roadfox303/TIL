@@ -64,26 +64,32 @@
   # EC2にログイン
   $ ssh -i aws-test.pem ec2-user@パブリックIPアドレス
 
-  # gitのインストール
-  $ sudo yum install git -y
+  # yumのアップデート
+  $ sudo yum -y update
+
+  # いろいろ必要になるものインストール(postgresの場合 ※mysqlなど他のDBを使用する場合はpostgresライブラリ関係の部分をそれぞれのDB固有のものにする)
+  $ sudo yum install \
+  git make gcc-c++ patch \
+  openssl-devel \
+  libyaml-devel libffi-devel libicu-devel \
+  libxml2 libxslt libxml2-devel libxslt-devel \
+  zlib-devel readline-devel \
+  postgresql postgresql-server postgresql-contrib postgresql-devel \
+  ImageMagick ImageMagick-devel \
+  epel-release
 
   # node.jsのインストール
-  $ sudo rpm -Uvh https://rpm.nodesource.com//pub_10.x/el/6/x86_64/nodejs-10.3.0-1nodesource.x86_64.rpm
-
-  # dependencies for rails のインストール
-  $ sudo yum install gcc gcc-c++ libyaml-devel libffi-devel libxml2 libxslt libxml2-devel libslt-devel -y
+  $ curl --silent --location http://rpm.nodesource.com/setup_12.x | sudo bash -
 
   # yarn のインストール
-  $ sudo npm install yarn  -g
-
-  # yarn のチェックファイル
-  $ sudo yarn install --check-files
+  $ curl -sL https://dl.yarnpkg.com/rpm/yarn.repo | sudo tee /etc/yum.repos.d/yarn.repo
+  $ sudo yum install yarn
 
   # git-core のインストール
   $ sudo yum install git-core
 
   # rbenvのクローン
-  $ git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+  $ git clone http://github.com/sstephenson/rbenv.git ~/.rbenv
 
   # rbenvのpath設定
   $ echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
@@ -116,13 +122,15 @@
   $ git clone https://github.com/rbenv/ruby-build.git ~/.rbenv/plugins/ruby-build
 
   # dependencies for ruby-build
-  $ sudo yum install bzip2 gdbm-devel openssl-devel libffi-devel libyaml-devel ncurses-devel readline-devel zlib-devel -y
+  $ sudo yum install -y gdbm-devel openssl-devel
 
   # rubyインストール
-  $ RUBY_CONFIGURE_OPTS=--disable-install-doc ~/.rbenv/bin/rbenv install 2.6.3
+  $ rbenv install -v 2.6.3
 
   # Set default Ruby version
   $ rbenv global 2.6.3 && rbenv rehash
+
+  # sshの作成
 
   # bundler のインストール
   $ gem install bundler -v 2.1.0
