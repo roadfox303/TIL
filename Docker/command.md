@@ -20,7 +20,10 @@ $ docker container ls -a
 ```
 $ docker container rm コンテナ名
 ```
-
+```
+# docker-compose.ymlのあるディレクトリで
+$ docker-compose down
+```
 ##### 起動中のコンテナ名確認
 ```
 $ docker-compose ps
@@ -40,3 +43,7 @@ sudo service docker status
 ```
 $ docker network ls
 ```
+
+### コンテナが起動しなくなった時
+- コンテナが起動しなくなった場合などは、develop環境なら docker-compose down、docker-compose up、して作成しなおすと手っ取り早い。
+- ただし、当然DBは削除されるので、そこだけ注意。安易にproduction環境でやってはいけない。
