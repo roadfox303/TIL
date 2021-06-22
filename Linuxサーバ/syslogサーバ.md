@@ -7,7 +7,7 @@
 ### 共通の設定
 - ※このjournaldの設定は多分いらない
 ```
-[ec2-user@ip-10-0-2-20 ~]$ sudo vim /etc/systemd/journald.conf
+[ec2-user@ip-10-0-1-30 ~]$ sudo vim /etc/systemd/journald.conf
 -----------vim-----------
 [Journal]
 #Storage=auto
@@ -20,9 +20,9 @@ RateLimitBurst=0
 # この二つのコメントアウトを外し、値を「0」に設定する。
 -------------------------
 
-[ec2-user@ip-10-0-2-20 ~]$ sudo systemctl restart systemd-journald
+[ec2-user@ip-10-0-1-30 ~]$ sudo systemctl restart systemd-journald
 
-[ec2-user@ip-10-0-2-20 ~]$ sudo vim /etc/rsyslog.conf
+[ec2-user@ip-10-0-1-30 ~]$ sudo vim /etc/rsyslog.conf
 -----------vim-----------
 ~~~~~~~
 ~~~~
@@ -31,13 +31,13 @@ $imjournalRatelimitBurst 0
 #上記を末尾または、「$ModLoad imjournal」の下らへんに追記
 -------------------------
 
-[ec2-user@ip-10-0-2-20 ~]$ sudo systemctl restart rsyslog.service
+[ec2-user@ip-10-0-1-30 ~]$ sudo systemctl restart rsyslog.service
 ```
 
 ### シスログサーバ（受信） の設定
 ```
 # 踏み台サーバ > シスログサーバ にログイン
-[ec2-user@ip-10-0-2-20 ~]$ sudo vim /etc/rsyslog.conf
+[ec2-user@ip-10-0-1-30 ~]$ sudo vim /etc/rsyslog.conf
 -----------vim-----------
 ~~~~~~~
 ~~~~
@@ -61,7 +61,7 @@ $AllowedSender TCP, 10.0.0.0/16
 ~~
 -------------------------
 
-[ec2-user@ip-10-0-2-20 ~]$ sudo systemctl restart rsyslog
+[ec2-user@ip-10-0-1-30 ~]$ sudo systemctl restart rsyslog
 ```
 
 ### クライアント（送信）の設定
@@ -78,7 +78,7 @@ $AllowedSender TCP, 10.0.0.0/16
 
 # Log anything (except mail) of level info or higher.
 # Don't log private authentication messages!
-*.info;mail.none;authpriv.none;cron.none @@10.0.2.20    /var/log/messages
+*.info;mail.none;authpriv.none;cron.none @@10.0.1.30    /var/log/messages
 # ここにシスログサーバ（送信先）を指定する。
 # ※ポート番号を 514 から変更している場合、「192.0.2.10:1234」のようにポート番号を指定する。
 
@@ -104,7 +104,7 @@ $ActionResumeRetryCount -1    # infinite retries if host is down
 
 # remote host is: name/ip:port, e.g. 192.168.0.1:514, port optional
 
-local1.* @@10.0.2.20:514 #TCP
+local1.* @@10.0.1.30:514 #TCP
 # シスログサーバ(ホスト)とポートを指定。
 
 ~~
@@ -115,5 +115,5 @@ local1.* @@10.0.2.20:514 #TCP
 ### 受信の確認
 - tail -f でログをリアルタイム表示できる。
 ```
-[ec2-user@ip-10-0-2-20 ~]$ sudo tail -f /var/log/messages
+[ec2-user@ip-10-0-1-30 ~]$ sudo tail -f /var/log/messages
 ```
